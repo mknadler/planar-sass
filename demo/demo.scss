@@ -1,0 +1,10 @@
+@import '../lib/planar.scss';
+
+$planar-x: 5;
+$planar-y: 5;
+
+$grid: make-grid($planar-x, $planar-y);
+
+body {
+  color: $grid + '';
+}

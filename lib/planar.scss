@@ -1,0 +1,135 @@
+$planar-x: 10 !default;
+$planar-y: 11 !default;
+$point-size: 15px !default;
+$planar-3d: false !default;
+$spacing: 0;
+
+// Make the grid outta maps and maps and maps
+@function make-grid($x-max, $y-max, $z-max: null) {
+  $grid: ();
+  @for $i from 1 through $x-max {
+    $row: ();
+
+    @if $planar-3d == false {
+      @for $j from 1 through $y-max {
+        $row: map-merge($row, ($j: false));
+      }
+    }
+    @else if $planar-3d == true {
+      @for $j from 1 through $y-max {
+        $line: ();
+        @for $k from 1 through $z-max {
+          $line: map-merge($line, ($k: false));
+        }
+        $row: map-merge($row, ($j: $line));
+      }
+    }
+    $grid: map-merge($grid, ($i: $row));
+  }
+  @return $grid;
+}
+
+// Set the value of a grid point based on its coords
+@function set-grid($grid, $val, $x, $y, $z: null) {
+  @if ($planar-3d == false) {
+    // get the x-map, merge the new y-map into it
+    $row: map-merge(map-get($grid, $x), ($y: $val));
+    // merge the new x-map into the grid
+    @return map-merge($grid, ($x: $row));
+  }
+  @else if ($planar-3d == true) {
+    // get the x-val map, and the y-val map from that
+    $row: map-get($grid, $x);
+    // and then the y-val map from that
+    $line: map-get($row, $y);
+    // merge in the new z-map into the y-map
+    $line: map-merge($line, ($z: $val));
+    // merge in the new y-map into the x-map
+    $row: map-merge($row, ($y: $line));
+    // merge the new x-map into the grid
+    $grid: map-merge($grid, ($x: $row));
+    @return $grid;
+  }
+}
+
+// Get the value of a grid point
+@function get-value($grid, $x, $y, $z: null) {
+  @if ($planar-3d == true) {
+    @return map-get(map-get(map-get($grid, $x), $y), $z);
+  }
+  @else if ($planar-3d == false) {
+    @return map-get(map-get($grid, $x), $y);
+  }
+}
+
+@function get-deep-value($grid, $val, $x, $y, $z: null) {
+  @return map-get(get-value($grid, $x, $y, $z), $val);
+}
+
+@function bulk-set($grid, $val) {
+  $grid: $grid;
+  @for $i from 1 through $planar-x {
+    @for $j from 1 through $planar-y {
+      @if $planar-3d == false {
+        $grid: set-grid($grid, $val, $i, $j);
+      }
+      @else if $planar-3d == true {
+        @for $k from 1 through $planar-z {
+          $grid: set-grid($grid, $val, $i, $j, $k);
+        }
+      }
+    }
+  }
+  @return $grid;
+}
+
+@function bulk-get($grid) {
+  $vals: ();
+  @for $i from 1 through $planar-x {
+    @for $j from 1 through $planar-y {
+      @if ($planar-3d == false) {
+        $vals: join($vals, map-values(map-get(map-get($grid, $i), $j)));
+      }
+      @else if ($planar-3d == true) {
+        @for $k from 1 through $planar-z {
+          $vals: join($vals, map-get(map-get(map-get($grid, $i), $j), $k));
+        }
+      }
+    }
+  }
+  @return $vals;
+}
+
+@function get-deep-val-from-neighbors($grid, $val, $x, $y) {
+  $vals: ();
+
+  @if $x != 1 {
+    $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y));
+  }
+  @if $y != 1 {
+    $vals: append($vals, get-deep-value($grid, $val, $x, $y - 1));
+  }
+  @if ($x != $planar-x) {
+    $vals: append($vals, get-deep-value($grid, color, $x + 1, $y));
+  }
+  @if $y != $planar-y {
+    $vals: append($vals, get-deep-value($grid, $val, $x, $y + 1));
+  }
+
+  @if ($x != 1) and ($y != 1) {
+    $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y - 1));
+  }
+
+  @if $x != $planar-x and $y != 1 {
+    $vals: append($vals, get-deep-value($grid, $val, $x + 1, $y - 1));
+  }
+  @if $x != $planar-x and $y != $planar-y {
+    $vals: append($vals, get-deep-value($grid, $val, $x + 1, $y + 1));
+  }
+  @if $x != 1 and $y != $planar-y {
+    $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y + 1));
+  }
+  @return $vals;
+}
+
+$grid: make-grid($planar-x, $planar-y);

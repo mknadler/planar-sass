@@ -1,0 +1,83 @@
+// Make the grid outta maps and maps and maps
+@function make-grid($x-max, $y-max) {
+  $grid: ();
+  @for $i from 1 through $x-max {
+    $row: ();
+
+    @for $j from 1 through $y-max {
+      $row: map-merge($row, ($j: false));
+    }
+
+    $grid: map-merge($grid, ($i: $row));
+  }
+  @return $grid;
+}
+
+// Set the value of a grid point based on its coords
+@function set-grid($grid, $val, $x, $y) {
+  // get the x-map, merge the new y-map into it
+  $row: map-merge(map-get($grid, $x), ($y: $val));
+  // merge the new x-map into the grid
+  @return map-merge($grid, ($x: $row));
+}
+
+// Get the value of a grid point
+@function get-value($grid, $x, $y) {
+  @return map-get(map-get($grid, $x), $y);
+}
+
+@function get-deep-value($grid, $val, $x, $y) {
+  @return map-get(get-value($grid, $x, $y), $val);
+}
+
+@function bulk-set($grid, $val) {
+  $grid: $grid;
+  @for $i from 1 through $planar-x {
+    @for $j from 1 through $planar-y {
+      $grid: set-grid($grid, $val, $i, $j);
+    }
+  }
+  @return $grid;
+}
+
+@function bulk-get($grid) {
+  $vals: ();
+  @for $i from 1 through $planar-x {
+    @for $j from 1 through $planar-y {
+      $vals: join($vals, map-values(map-get(map-get($grid, $i), $j)));
+    }
+  }
+  @return $vals;
+}
+
+@function get-deep-val-from-neighbors($grid, $val, $x, $y) {
+  $vals: ();
+
+  @if $x != 1 {
+    $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y));
+  }
+  @if $y != 1 {
+    $vals: append($vals, get-deep-value($grid, $val, $x, $y - 1));
+  }
+  @if ($x != $planar-x) {
+    $vals: append($vals, get-deep-value($grid, color, $x + 1, $y));
+  }
+  @if $y != $planar-y {
+    $vals: append($vals, get-deep-value($grid, $val, $x, $y + 1));
+  }
+
+  @if ($x != 1) and ($y != 1) {
+    $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y - 1));
+  }
+
+  @if $x != $planar-x and $y != 1 {
+    $vals: append($vals, get-deep-value($grid, $val, $x + 1, $y - 1));
+  }
+  @if $x != $planar-x and $y != $planar-y {
+    $vals: append($vals, get-deep-value($grid, $val, $x + 1, $y + 1));
+  }
+  @if $x != 1 and $y != $planar-y {
+    $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y + 1));
+  }
+  @return $vals;
+}

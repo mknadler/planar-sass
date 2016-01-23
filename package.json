@@ -1,0 +1,20 @@
+{
+  "name": "planar",
+  "version": "0.1.0",
+  "description": "Sass for graphs and coordinate systems.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mknadler/planar-sass.git"
+  },
+  "author": "Miriam Nadler",
+  "license": "GPL-3.0",
+  "bugs": "https://github.com/mknadler/planar-sass/issues",
+  "homepage": "https://github.com/mknadler/planar-sass",
+  "main": "lib/planar.scss",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-concat": "^0.5.1",
+    "grunt-sass": "^1.1.0",
+    "load-grunt-tasks": "^3.4.0"
+  }
+}
