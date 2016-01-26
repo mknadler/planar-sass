@@ -27,7 +27,12 @@
 }
 
 @function get-deep-value($grid, $val, $x, $y) {
-  @return map-get(get-value($grid, $x, $y), $val);
+  @if get-value($grid, $x, $y) {
+    @return map-get(get-value($grid, $x, $y), $val);
+  }
+  @else {
+    @return false;
+  }
 }
 
 @function bulk-set($grid, $val) {
@@ -45,6 +50,21 @@
   @for $i from 1 through $planar-x {
     @for $j from 1 through $planar-y {
       $vals: join($vals, map-values(map-get(map-get($grid, $i), $j)));
+    }
+  }
+  @return $vals;
+}
+
+// returns a list of x,y
+@function find-all-with-key($grid, $key) {
+  $vals: ();
+  @for $i from 1 through $planar-x {
+    @for $j from 1 through $planar-y {
+      @if type-of(get-value($grid, $i, $j)) == map {
+        @if map-has-key(get-value($grid, $i, $j), $key) {
+          $vals: append($vals, ($i $j));
+        }
+      }
     }
   }
   @return $vals;
@@ -80,4 +100,24 @@
     $vals: append($vals, get-deep-value($grid, $val, $x - 1, $y + 1));
   }
   @return $vals;
+}
+
+
+@function make-grid-chunk($grid, $x1, $y1, $x2, $y2) {
+
+    $coords: ();
+    @for $x from $x1 through $x2 {
+      @for $y from $y1 through $y2 {
+        $coords: append($coords, ($x, $y), comma);
+      }
+    }
+
+    @each $x, $y in $coords {
+      $current-val: get-value($grid, $x, $y);
+      $new-val: map-merge($current-val, (chunk: ($x1 $y1, $x2 $y2)));
+
+      $grid: set-grid($grid, $new-val, $x, $y);
+    }
+
+    @return $grid;
 }

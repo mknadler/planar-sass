@@ -1,10 +1,20 @@
 @import '../lib/planar.scss';
 
-$planar-x: 5;
-$planar-y: 5;
+$planar-x: 2;
+$planar-y: 3;
 
 $grid: make-grid($planar-x, $planar-y);
 
 body {
-  color: $grid + '';
+  //color: $grid + '';
+}
+
+$grid: bulk-set($grid, (color: blue));
+
+
+$grid: make-grid-chunk($grid, 1, 2, 2, 3);
+
+body {
+  //coords: $grid + '';
+  test: get-value($grid, 1, 2);
 }
